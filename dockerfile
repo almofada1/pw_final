@@ -1,10 +1,10 @@
 # Use the official PHP 8.2 image with Apache
 FROM php:8.2-apache
 
-# Install Git and SQLite
+# Install Git, SQLite, and MySQLi
 RUN apt-get update && \
-    apt-get install -y git sqlite3 libsqlite3-dev && \
-    docker-php-ext-install pdo pdo_sqlite
+    apt-get install -y git sqlite3 libsqlite3-dev default-mysql-client && \
+    docker-php-ext-install pdo pdo_sqlite mysqli
 
 # Clone your GitHub repository
 RUN git clone https://github.com/almofada1/pw_final /var/www/html/
