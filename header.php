@@ -71,19 +71,38 @@ if (isset($_SESSION['user_id'])) {
     </style>
 </head>
 
+<style>
+    .circle-link {
+        border: 2px solid white;
+        border-radius: 50%;
+        padding: 5px 10px;
+    }
+    .navbar-nav {
+        margin-bottom: 20px; /* Add bottom margin to navbar */
+    }
+    .header {
+        height: auto; /* Adjust header height */
+        padding: 10px 0; /* Reduce padding */
+    }
+    .main-content {
+        margin-top: 70px; /* Add top margin to main content to avoid overlap */
+    }
+    body {
+        padding-top: 70px; /* Adjust this value based on the height of your header */
+    }
+</style>
+
 <body class="index-page">
 
 <header id="header" class="header d-flex align-items-center fixed-top">
-    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+	<div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-        <nav id="navmenu" class="navmenu d-flex justify-content-between w-100">
-            <ul class="navbar-nav">
-                <li class="nav-item"><a href="index.php" class="nav-link <?php echo isActive('index.php'); ?>">Home</a></li>
-            </ul>
-            <ul class="navbar-nav ms-auto d-flex align-items-center">
-                <?php
+	<nav id="navmenu" class="navmenu">
+		<ul>
+            <li><a href="#hero" class="active">Home</a></li>
+            <?php
                 if (!isset($_SESSION['user_id'])) {
-                    echo '<li class="nav-item"><a href="login.php" class="nav-link">Login</a></li>';
+                    echo '<li class="nav-item"><a href="login.php" class="nav-link">Log in</a></li>';
                     echo '<li class="nav-item"><a href="register.php" class="nav-link circle-link">Register</a></li>';
                 } else {
                     echo '<li class="nav-item me-2"><a href="reservas.php" class="btn btn-primary">Make a Reservation</a></li>';
@@ -99,9 +118,10 @@ if (isset($_SESSION['user_id'])) {
                     echo '</ul>';
                     echo '</li>';
                 }
-                ?>
-                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-            </ul>
-        </nav>
-    </div>
+            ?>
+        </ul>
+		<i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+	</nav>
+
+	</div>
 </header>
