@@ -21,13 +21,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
         if (password_verify($password, $row['password'])) {
+            $_SESSION['user_id'] = $row['id_hospede'];
             $_SESSION['email'] = $email;
-            echo "Login successful!";
+            header("Location: index.php");
+            exit();
         } else {
-            echo "Invalid password.";
+            $_SESSION['error'] = "Invalid password.";
         }
     } else {
-        echo "No user found with that email.";
+        $_SESSION['error'] = "No user found with that email.";
     }
 
     $stmt->close();
@@ -35,10 +37,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 <?php include "header.php";?>
-
+<section id="hero" class="hero section dark-background">
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
             <form method="post" action="login.php">
                 <div class="form-group">
                     <label for="email">Email:</label>

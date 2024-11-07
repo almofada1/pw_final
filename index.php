@@ -5,36 +5,7 @@
 	<!-- Hero Section -->
 	<section id="hero" class="hero section dark-background">
 
-	<div class="container mt-5" style="">
-    <h2>Database Table</h2>
-    <input class="form-control mb-4" id="tableSearch" type="text" placeholder="Search...">
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-            </tr>
-        </thead>
-        <tbody id="myTable">
-            <tr>
-                <td>1</td>
-                <td>John Doe</td>
-                <td>john@example.com</td>
-            </tr>
-        </tbody>
-    </table>
-
-	<script>
-		$(document).ready(function(){
-			$("#tableSearch").on("keyup", function() {
-				var value = $(this).val().toLowerCase();
-				$("#myTable tr").filter(function() {
-					$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-				});
-			});
-		});
-	</script>
+	
 
 	<svg class="hero-waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28 " preserveAspectRatio="none">
 		<defs>

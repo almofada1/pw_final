@@ -1,7 +1,10 @@
-<?php include "header.php";?>
+<?php
+session_start();
+ob_start();
+include "header.php";
+?>
 
 <main class="main">
-
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nome = htmlspecialchars($_POST['nome']);
@@ -16,23 +19,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("Connection failed: " . $conn->connect_error);
     }
 
-    $stmt = $conn->prepare("INSERT INTO hospedes (nome, email, telefone, endereco, password) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssss", $nome, $email, $telefone, $endereco, $password);
+    // Check if email already exists
+    $stmt = $conn->prepare("SELECT id_hospede FROM hospedes WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $stmt->store_result();
 
-    if ($stmt->execute()) {
-        echo "Registration successful!";
+    if ($stmt->num_rows > 0) {
+        $_SESSION['error'] = "This email is already registered.";
     } else {
-        echo "Error: " . $stmt->error;
+        $stmt->close();
+
+        $stmt = $conn->prepare("INSERT INTO hospedes (nome, email, telefone, endereco, password) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssss", $nome, $email, $telefone, $endereco, $password);
+
+        if ($stmt->execute()) {
+            header("Location: index.php?success=1");
+            exit();
+        } else {
+            $_SESSION['error'] = "Error: " . $stmt->error;
+        }
+
+        $stmt->close();
     }
 
-    $stmt->close();
     $conn->close();
+}
+if (ob_get_length()) {
+    ob_end_flush();
 }
 ?>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['success'])): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Registration successful!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
             <form method="post" action="register.php">
                 <div class="form-group">
                     <label for="nome">Nome:</label>
@@ -59,8 +91,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 </div>
-
-
 
 </main>
 
