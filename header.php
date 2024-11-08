@@ -99,7 +99,7 @@ if (isset($_SESSION['user_id'])) {
 
 	<nav id="navmenu" class="navmenu">
 		<ul>
-            <li><a href="#hero" class="active">Home</a></li>
+            <li><a href="index.php" class="active">Home</a></li>
             <?php
                 if (!isset($_SESSION['user_id'])) {
                     echo '<li class="nav-item"><a href="login.php" class="nav-link">Log in</a></li>';

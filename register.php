@@ -2,10 +2,11 @@
 session_start();
 ob_start();
 include "header.php";
-?>
+if (isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
 
-<main class="main">
-<?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nome = htmlspecialchars($_POST['nome']);
     $email = htmlspecialchars($_POST['email']);
@@ -20,35 +21,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Check if email already exists
-    $stmt = $conn->prepare("SELECT id_hospede FROM hospedes WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id_hospede, password FROM hospedes WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $stmt->store_result();
 
     if ($stmt->num_rows > 0) {
-        $_SESSION['error'] = "This email is already registered.";
+        // If user already exists but doesn't have a password, update the password
+        $stmt->bind_result($id_hospede, $existing_password);
+        $stmt->fetch();
+
+        if (empty($existing_password)) {
+            $stmt->close();
+            $stmt = $conn->prepare("UPDATE hospedes SET nome=?, telefone=?, endereco=?, password=? WHERE id_hospede=?");
+            $stmt->bind_param("ssssi", $nome, $telefone, $endereco, $password, $id_hospede);
+            $stmt->execute();
+        }
+
+        $_SESSION['user_id'] = $id_hospede;
+        $_SESSION['user_name'] = $nome;
+        header("Location: index.php");
+        exit();
     } else {
         $stmt->close();
 
+        // Insert the new user
         $stmt = $conn->prepare("INSERT INTO hospedes (nome, email, telefone, endereco, password) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $nome, $email, $telefone, $endereco, $password);
 
         if ($stmt->execute()) {
-            header("Location: index.php?success=1");
+            // Log in the user automatically after registration
+            $_SESSION['user_id'] = $conn->insert_id;
+            $_SESSION['user_name'] = $nome;
+            header("Location: index.php");
             exit();
         } else {
             $_SESSION['error'] = "Error: " . $stmt->error;
         }
-
         $stmt->close();
     }
 
     $conn->close();
 }
+
 if (ob_get_length()) {
     ob_end_flush();
 }
 ?>
+
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -84,7 +104,7 @@ if (ob_get_length()) {
                 </div>
                 <div class="form-group">
                     <label for="password">Password:</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <input type="password" class="form-control" id="password" name="password">
                 </div>
                 <button type="submit" class="btn btn-primary">Register</button>
             </form>
@@ -94,4 +114,4 @@ if (ob_get_length()) {
 
 </main>
 
-<?php include "footer.php";?>
+<?php include "footer.php"; ?>
