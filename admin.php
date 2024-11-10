@@ -85,47 +85,52 @@ $stmt->close();
             </div>
             <div class="tab-pane fade" id="reservations" role="tabpanel" aria-labelledby="reservations-tab">
                 <?php
-                $result = $conn->query("SELECT * FROM reservas");
+                // Fetch reservation records, including num_pessoas and email
+                $result = $conn->query("SELECT r.*, h.email FROM reservas r 
+                                        JOIN hospedes h ON r.id_hospede = h.id_hospede");
                 ?>
                 <div class="container mt-5">
                     <h2>Records</h2>
-                    <div class="form-group">
-                        <label for="searchReservations">Search:</label>
-                        <input type="text" id="searchReservations" class="form-control" placeholder="Search" onkeyup="searchRecords('reservationsTable', 'searchReservations', ['id_reserva', 'id_hospede', 'id_quarto', 'data_checkin', 'data_checkout', 'valor_total'])">
-                    </div>
-                    <div class="form-group">
-                        <label>Filter by:</label><br>
-                        <input type="checkbox" id="id_reserva" checked> ID Reserva
-                        <input type="checkbox" id="id_hospede" checked> ID Hospede
-                        <input type="checkbox" id="id_quarto" checked> ID Quarto
-                        <input type="checkbox" id="data_checkin" checked> Check-in Date
-                        <input type="checkbox" id="data_checkout" checked> Check-out Date
-                        <input type="checkbox" id="valor_total" checked> Montante
-                    </div>
+                    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addReservationModal">Add Reservation</button>
                     <table class="table table-bordered" id="reservationsTable">
                         <thead>
                             <tr>
                                 <th>ID Reserva</th>
-                                <th>ID Hospede</th>
+                                <th>Email</th>
                                 <th>ID Quarto</th>
+                                <th>Num Pessoas</th>
                                 <th>Duração</th>
                                 <th>Montante</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php while ($row = $result->fetch_assoc()): ?>
                                 <tr>
                                     <td><?php echo $row['id_reserva']; ?></td>
-                                    <td><?php echo $row['id_hospede']; ?></td>
+                                    <td><?php echo $row['email']; ?></td>
                                     <td><?php echo $row['id_quarto']; ?></td>
+                                    <td><?php echo $row['num_pessoas']; ?></td>
                                     <td><?php echo $row['data_checkin']; ?> até <?php echo $row['data_checkout']; ?></td>
                                     <td><?php echo $row['valor_total']; ?></td>
+                                    <td>
+                                        <button onclick="openEditReservationModal(
+                                            <?= $row['id_reserva']; ?>, 
+                                            '<?= addslashes($row['email']); ?>', 
+                                            <?= $row['num_pessoas']; ?>, 
+                                            '<?= $row['data_checkin']; ?>', 
+                                            '<?= $row['data_checkout']; ?>'
+                                        )" class="btn btn-primary">Edit</button>
+                                        <button onclick="deleteReservation(<?= $row['id_reserva']; ?>)" class="btn btn-danger">Delete</button>
+                                    </td>
                                 </tr>
                             <?php endwhile; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+
             <div class="tab-pane fade" id="rooms" role="tabpanel" aria-labelledby="rooms-tab">
                 <?php
                 $result = $conn->query("SELECT * FROM quartos");
@@ -134,20 +139,18 @@ $stmt->close();
                     <h2>Records</h2>
                     <div class="form-group">
                         <label for="searchRooms">Search:</label>
-                        <input type="text" id="searchRooms" class="form-control" placeholder="Search" onkeyup="searchRecords('roomsTable', 'searchRooms', ['id_quarto', 'num_pessoas', 'status'])">
+                        <input type="text" id="searchRooms" class="form-control" placeholder="Search" onkeyup="searchRecords('roomsTable', 'searchRooms', ['id_quarto', 'num_pessoas'])">
                     </div>
                     <div class="form-group">
                         <label>Filter by:</label><br>
                         <input type="checkbox" id="id_quarto" checked> ID
                         <input type="checkbox" id="num_pessoas" checked> Tamanho
-                        <input type="checkbox" id="status" checked> Status
                     </div>
                     <table class="table table-bordered" id="roomsTable">
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Tamanho</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -155,7 +158,6 @@ $stmt->close();
                                 <tr>
                                     <td><?php echo $row['id_quarto']; ?></td>
                                     <td><?php echo $row['num_pessoas'] . ' ' . ($row['num_pessoas'] > 1 ? 'pessoas' : 'pessoa');?></td>
-                                    <td><?php echo $row['status']; ?></td>
                                 </tr>
                             <?php endwhile; ?>
                         </tbody>
@@ -165,43 +167,6 @@ $stmt->close();
         </div>
     </div>
 </main>
-
-<script>
-    function editRecord(id) {
-        
-    }
-
-    function deleteRecord(id) {
-        if (confirm('Are you sure you want to delete this record?')) {
-            window.location.href = `delete_hospedes.php?id=${id}`;
-        }
-    }
-
-
-    function searchRecords(tableId, searchId, fields) {
-        var input, filter, table, tr, td, i, j, txtValue;
-        input = document.getElementById(searchId);
-        filter = input.value.toUpperCase();
-        table = document.getElementById(tableId);
-        tr = table.getElementsByTagName("tr");
-
-        for (i = 1; i < tr.length; i++) {
-            tr[i].style.display = "none";
-            td = tr[i].getElementsByTagName("td");
-            for (j = 0; j < td.length; j++) {
-                if (td[j] && document.getElementById(fields[j]).checked) {
-                    txtValue = td[j].textContent || td[j].innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                        break;
-                    }
-                }
-            }
-        }
-    }
-</script>
-
-<?php include "footer.php";?>
 
 <!-- Add Hospede Modal -->
 <div class="modal fade" id="addHospedeModal" tabindex="-1" aria-labelledby="addHospedeModalLabel" aria-hidden="true">
@@ -239,7 +204,7 @@ $stmt->close();
     </div>
 </div>
 
-<!-- Edit Modal -->
+<!-- Edit hospedes Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -276,8 +241,95 @@ $stmt->close();
     </div>
 </div>
 
+<!-- Add Reservation Modal -->
+<div class="modal fade" id="addReservationModal" tabindex="-1" aria-labelledby="addReservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <form action="add_reservation.php" method="post" onsubmit="return validateDates()">
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="mb-3">
+                <label for="num_pessoas" class="form-label">Number of People</label>
+                <input type="number" class="form-control" id="num_pessoas" name="num_pessoas" min="1" max="4" required>
+            </div>
+            <div class="mb-3">
+                <label for="checkin_date" class="form-label">Check-in Date</label>
+                <input type="date" class="form-control" id="checkin_date" name="checkin_date" required>
+            </div>
+            <div class="mb-3">
+                <label for="checkout_date" class="form-label">Check-out Date</label>
+                <input type="date" class="form-control" id="checkout_date" name="checkout_date" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Reserve</button>
+        </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Reservation Modal -->
+<div class="modal fade" id="editReservationModal" tabindex="-1" aria-labelledby="editReservationLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="edit_reservation.php" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editReservationLabel">Edit Reservation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id_reserva" id="editReservationId">
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" id="editEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editNumGuests" class="form-label">Number of Guests</label>
+                        <input type="number" class="form-control" name="num_pessoas" id="editNumGuests" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCheckinDate" class="form-label">Check-in Date</label>
+                        <input type="date" class="form-control" name="checkin_date" id="editCheckinDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCheckoutDate" class="form-label">Check-out Date</label>
+                        <input type="date" class="form-control" name="checkout_date" id="editCheckoutDate" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <script>
+
+function searchRecords(tableId, searchId, fields) {
+    var input, filter, table, tr, td, i, j, txtValue;
+    input = document.getElementById(searchId);
+    filter = input.value.toUpperCase();
+    table = document.getElementById(tableId);
+    tr = table.getElementsByTagName("tr");
+
+    for (i = 1; i < tr.length; i++) {
+        tr[i].style.display = "none";
+        td = tr[i].getElementsByTagName("td");
+        for (j = 0; j < td.length; j++) {
+            if (td[j] && document.getElementById(fields[j]).checked) {
+                txtValue = td[j].textContent || td[j].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    break;
+                }
+            }
+        }
+    }
+}
+
 function openEditModal(id) {
     // Fetch existing data via AJAX
     fetch('get_hospede.php?id=' + id)
@@ -296,12 +348,7 @@ function openEditModal(id) {
         })
         .catch(error => console.error('Error:', error));
 }
-</script>
 
-<!-- Your HTML content, modals, and forms above -->
-
-<!-- JavaScript code to handle the edit form submission -->
-<script>
 document.getElementById('editForm').addEventListener('submit', function (event) {
     event.preventDefault();
 
@@ -320,7 +367,40 @@ document.getElementById('editForm').addEventListener('submit', function (event) 
     })
     .catch(error => console.error('Error:', error));
 });
+
+function deleteRecord(id) {
+    if (confirm('Are you sure you want to delete this record?')) {
+        window.location.href = `delete_hospedes.php?id=${id}`;
+    }
+}
+
 </script>
 
-</body>
-</html>
+<script>
+    // Function to open the edit reservation modal
+    function openEditReservationModal(id, email, numGuests, checkinDate, checkoutDate) {
+        // Populate the modal fields with the reservation data
+        document.getElementById('editReservationId').value = id;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editNumGuests').value = numGuests;
+        document.getElementById('editCheckinDate').value = checkinDate;
+        document.getElementById('editCheckoutDate').value = checkoutDate;
+        
+        // Show the modal
+        const editModal = new bootstrap.Modal(document.getElementById('editReservationModal'));
+        editModal.show();
+    }
+
+    // Function to confirm and delete a reservation
+    function deleteReservation(id) {
+        if (confirm('Are you sure you want to delete this reservation?')) {
+            // Redirect to delete_reservations.php with the reservation ID
+            window.location.href = `delete_reservation.php?id=${id}`;
+        }
+    }
+
+
+</script>
+
+
+<?php include "footer.php";?>
