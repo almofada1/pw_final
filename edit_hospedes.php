@@ -1,22 +1,20 @@
 <?php
 include 'db.php';
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $id = intval($_POST['id_hospede']);
-    $nome = htmlspecialchars($_POST['nome']);
-    $email = htmlspecialchars($_POST['email']);
-    $telefone = htmlspecialchars($_POST['telefone']);
-    $endereco = htmlspecialchars($_POST['endereco']);
+    $id_hospede = $_POST['id_hospede'];
+    $nome = $_POST['nome'];
+    $email = $_POST['email'];
+    $telefone = $_POST['telefone'];
+    $endereco = $_POST['endereco'];
+    $is_admin = isset($_POST['is_admin']) ? 1 : 0;
 
-    $stmt = $conn->prepare("UPDATE hospedes SET nome = ?, email = ?, telefone = ?, endereco = ? WHERE id_hospede = ?");
-    $stmt->bind_param("ssssi", $nome, $email, $telefone, $endereco, $id);
-
+    $stmt = $conn->prepare("UPDATE hospedes SET nome = ?, email = ?, telefone = ?, endereco = ?, is_admin = ? WHERE id_hospede = ?");
+    $stmt->bind_param("ssssii", $nome, $email, $telefone, $endereco, $is_admin, $id_hospede);
     if ($stmt->execute()) {
-        echo "Hospede updated successfully!";
+        echo "Hospede updated successfully";
     } else {
-        echo "Failed to update hospede!";
+        echo "Error updating hospede";
     }
     $stmt->close();
 }
-$conn->close();
 ?>

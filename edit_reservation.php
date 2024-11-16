@@ -59,7 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("issiii", $hospede_id, $checkin_date, $checkout_date, $num_pessoas, $id_quarto, $id_reserva);
 
         if ($stmt->execute()) {
-            // If email has been updated, also update the guest email in the 'hospedes' table
             $stmt_email = $conn->prepare("UPDATE hospedes SET email = ? WHERE id_hospede = ?");
             $stmt_email->bind_param("si", $email, $hospede_id);
             $stmt_email->execute();

@@ -2,9 +2,11 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+
 function isActive($page) {
     return basename($_SERVER['PHP_SELF']) == $page ? 'active' : '';
 }
+
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
     $conn = new mysqli("my-mysql", "root", "fragalha", "pw_final");
@@ -13,10 +15,11 @@ if (isset($_SESSION['user_id'])) {
         die("Connection failed: " . $conn->connect_error);
     }
 
-    $stmt = $conn->prepare("SELECT nome FROM hospedes WHERE id_hospede = ?");
+    // Fetch the user's name and is_admin flag
+    $stmt = $conn->prepare("SELECT nome, is_admin FROM hospedes WHERE id_hospede = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $stmt->bind_result($nome);
+    $stmt->bind_result($nome, $is_admin);
     $stmt->fetch();
     $stmt->close();
     $conn->close();
@@ -90,6 +93,9 @@ if (isset($_SESSION['user_id'])) {
     body {
         padding-top: 70px; /* Adjust this value based on the height of your header */
     }
+    header{
+        background-color: #3b3d49;
+    }
 </style>
 
 <body class="index-page">
@@ -112,13 +118,15 @@ if (isset($_SESSION['user_id'])) {
                     echo '</a>';
                     echo '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
                     echo '<li><a class="dropdown-item" href="profile.php">Profile</a></li>';
-                    echo '<li><a class="dropdown-item" href="settings.php">Settings</a></li>';
+                    if (isset($is_admin) && $is_admin == 1) {
+                        echo '<li><a class="dropdown-item" href="admin.php">Admin</a></li>';
+                    }
                     echo '<li><hr class="dropdown-divider"></li>';
                     echo '<li><a class="dropdown-item" href="logout.php">Logout</a></li>';
                     echo '</ul>';
                     echo '</li>';
                 }
-            ?>
+                ?>
         </ul>
 		<i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
 	</nav>

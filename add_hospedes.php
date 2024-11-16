@@ -2,6 +2,11 @@
 include 'db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (empty($_POST['nome']) || empty($_POST['email']) || empty($_POST['telefone']) || empty($_POST['endereco'])) {
+        header("Location: admin.php?error=All fields are required.");
+        exit();
+    }
+
     $nome = $_POST['nome'];
     $email = $_POST['email'];
     $telefone = $_POST['telefone'];
