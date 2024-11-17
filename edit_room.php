@@ -1,4 +1,5 @@
 <?php
+    include 'db.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_quarto = $_POST['id_quarto'];
     $num_pessoas = $_POST['num_pessoas'];

@@ -9,7 +9,7 @@ if (isset($_GET['id'])) {
     $stmt->bind_param("i", $id_reserva);
 
     if ($stmt->execute()) {
-        header("Location: admin.php?tab=reservations");
+        header("Location: " . $_SERVER['HTTP_REFERER']);
     } else {
         echo "Error deleting reservation.";
     }

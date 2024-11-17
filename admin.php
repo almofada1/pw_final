@@ -1,42 +1,69 @@
 <?php
-    include 'db.php';
+// Include the database connection file
+include 'db.php';
 
-    // Start the session if not already started
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
+// Start the session if it hasn't been started already
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
-    // Check if user is logged in, if not redirect to login page
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: login.php");
-        exit();
-    }
+// Check if the user is logged in by verifying the existence of 'user_id' in the session
+if (!isset($_SESSION['user_id'])) {
+    // If not logged in, redirect to the login page
+    header("Location: login.php");
+    exit();
+}
 
-    $user_id = $_SESSION['user_id'];
+// Get the logged-in user's ID from the session
+$user_id = $_SESSION['user_id'];
 
-    // Check if the user is an admin
-    $stmt = $conn->prepare("SELECT is_admin FROM hospedes WHERE id_hospede = ?"); 
-    $stmt->bind_param("i", $user_id); 
-    $stmt->execute(); 
-    $result = $stmt->get_result();
+// Check if the database connection ($conn) is successful
+if ($conn->connect_error) {
+    die("Database connection failed: " . $conn->connect_error);
+}
 
-    // Check if the user exists and if they are an admin
-    if ($result->num_rows == 0) {
-        header("Location: index.php"); 
-        exit();
-    }
+// Prepare a statement to fetch the 'is_admin' status of the logged-in user
+$stmt = $conn->prepare("SELECT is_admin FROM hospedes WHERE id_hospede = ?");
+if ($stmt === false) {
+    die("Prepare failed: " . $conn->error);
+}
 
-    $row = $result->fetch_assoc();
-    $isAdmin = $row['is_admin']; // Now $isAdmin is properly defined
+// Bind the user ID parameter to the prepared statement
+$stmt->bind_param("i", $user_id);
 
-    // If the user is not an admin, redirect to the homepage
-    if ($isAdmin != 1) {
-        header("Location: index.php"); 
-        exit();
-    }
+// Execute the prepared statement
+$stmt->execute();
 
-    $stmt->close();
+// Get the result from the statement execution
+$result = $stmt->get_result();
+
+// Check if the user exists in the database
+if ($result->num_rows === 0) {
+    // If no matching user is found, redirect to the homepage (or an error page)
+    header("Location: index.php");
+    exit();
+}
+
+// Fetch the result as an associative array
+$row = $result->fetch_assoc();
+$isAdmin = $row['is_admin'] ?? 0; // Use null coalescing to ensure $isAdmin is defined
+
+// Free the result set
+$result->free();
+
+// Close the statement
+$stmt->close();
+
+// Close the database connection
+$conn->close();
+
+// If the user is not an admin, redirect them to the homepage
+if ($isAdmin != 1) {
+    header("Location: index.php");
+    exit();
+}
 ?>
+
 
 <?php include "header.php"; ?>
 
@@ -68,17 +95,15 @@
 
                     <div class="form-group">
                         <label for="searchHospedes">Search:</label>
-                        <input type="text" id="searchHospedes" class="form-control" placeholder="Search" onkeyup="searchRecords('hospedesTable', 'searchHospedes', ['id_hospede', 'nome', 'email', 'telefone', 'endereco'])">
+                        <input type="text" id="searchHospedes" class="form-control" placeholder="Search" onkeyup="searchRecords('hospedesTable', 'searchHospedes')">
                     </div>
+
+                    <!-- Admin Filter Checkbox -->
                     <div class="form-group">
-                        <label>Filter by:</label><br>
-                        <input type="checkbox" id="id_hospede" checked> ID
-                        <input type="checkbox" id="nome" checked> Nome
-                        <input type="checkbox" id="email" checked> Email
-                        <input type="checkbox" id="telefone" checked> Telefone
-                        <input type="checkbox" id="endereco" checked> Endereço
-                        <input type="checkbox" id="filter_admin" onchange="searchRecords('hospedeTable', 'searchQuery', ['id_hospede', 'nome', 'email', 'telefone', 'endereco'])"> Show Only Admins
+                        <label for="adminFilter">Show Only Admins</label>
+                        <input type="checkbox" id="adminFilter" onchange="searchRecords('hospedesTable', 'searchHospedes')">
                     </div>
+
                     <table class="table table-bordered" id="hospedesTable">
                         <thead>
                             <tr>
@@ -111,12 +136,15 @@
             <div class="tab-pane fade" id="reservations" role="tabpanel" aria-labelledby="reservations-tab">
                 <?php
                 // Fetch reservation records, including num_pessoas and email
-                $result = $conn->query("SELECT r.*, h.email FROM reservas r 
-                                        JOIN hospedes h ON r.id_hospede = h.id_hospede");
+                $result = $conn->query("SELECT r.*, h.email FROM reservas r JOIN hospedes h ON r.id_hospede = h.id_hospede");
                 ?>
                 <div class="container mt-5">
                     <h2>Records</h2>
                     <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addReservationModal">Add Reservation</button>
+                    <div class="form-group">
+                        <label for="searchReservations">Search:</label>
+                        <input type="text" id="searchReservations" class="form-control" placeholder="Search" onkeyup="searchRecords('reservationsTable', 'searchReservations')">
+                    </div>
                     <table class="table table-bordered" id="reservationsTable">
                         <thead>
                             <tr>
@@ -165,12 +193,7 @@
                     <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addRoomModal">Add Room</button>
                     <div class="form-group">
                         <label for="searchRooms">Search:</label>
-                        <input type="text" id="searchRooms" class="form-control" placeholder="Search" onkeyup="searchRecords('roomsTable', 'searchRooms', ['id_quarto', 'num_pessoas'])">
-                    </div>
-                    <div class="form-group">
-                        <label>Filter by:</label><br>
-                        <input type="checkbox" id="id_quarto" checked> ID
-                        <input type="checkbox" id="num_pessoas" checked> Tamanho
+                        <input type="text" id="searchRooms" class="form-control" placeholder="Search" onkeyup="searchRecords('roomsTable', 'searchRooms')">
                     </div>
                     <table class="table table-bordered" id="roomsTable">
                         <thead>
@@ -406,133 +429,91 @@
 
 <script>
 
-function searchRecords(tableId, searchId, fields) {
-    var input, filter, table, tr, td, i, j, txtValue, filterAdmins, isAdmin;
-    
-    input = document.getElementById(searchId);
-    filter = input.value.toUpperCase();  // Convert to uppercase for case-insensitive matching
-    table = document.getElementById(tableId);
-    tr = table.getElementsByTagName("tr");
+    function searchRecords(tableId, searchId) {
+        var input, filter, table, tr, td, i, j, txtValue, adminFilterChecked;
+        
+        // Get the search input value
+        input = document.getElementById(searchId);
+        filter = input.value.toUpperCase();  // Convert to uppercase for case-insensitive matching
+        table = document.getElementById(tableId);
+        tr = table.getElementsByTagName("tr");
 
-    // Get the admin filter checkbox status
-    filterAdmins = document.getElementById("filter_admin").checked;
+        // Get the status of the admin filter checkbox
+        adminFilterChecked = document.getElementById("adminFilter").checked;
 
-    for (i = 1; i < tr.length; i++) {  // Start from 1 to skip the header row
-        tr[i].style.display = "none";  // Initially hide the row
-        td = tr[i].getElementsByTagName("td");
+        for (i = 1; i < tr.length; i++) {  // Start from 1 to skip the header row
+            tr[i].style.display = "none";  // Initially hide the row
+            td = tr[i].getElementsByTagName("td");
 
-        // Check the admin status using the data-is-admin attribute
-        isAdmin = tr[i].getAttribute("data-is-admin") === "1";  // Admin is 1, non-admin is 0
+            var rowMatchesSearch = false;
+            var rowIsAdmin = tr[i].getAttribute("data-is-admin") === "1";  // Check if this row is an admin
 
-        // If admin filter is checked, only show admins
-        if (filterAdmins && !isAdmin) {
-            continue;  // Skip this row if it's not an admin
-        }
+            // If the admin filter is checked, ensure this row is an admin
+            if (adminFilterChecked && !rowIsAdmin) {
+                continue;  // Skip non-admin rows
+            }
 
-        // Check if the row matches the search query for the selected fields
-        var rowMatchesSearch = false;
-
-        // Loop through each field (checkbox) to see if it should be included in the search
-        for (j = 0; j < td.length; j++) {  // Include all columns
-            if (td[j] && document.getElementById(fields[j]).checked) {  // Check if the checkbox for this column is checked
-                txtValue = td[j].textContent || td[j].innerText;  // Get the text content
-                if (txtValue.toUpperCase().indexOf(filter) > -1) {  // Case-insensitive match
-                    rowMatchesSearch = true;  // Row matches the search
-                    break;
+            // Loop through each column to see if it matches the search term
+            for (j = 0; j < td.length; j++) {  // Loop through columns in each row
+                if (td[j]) {  // Check if the column exists
+                    txtValue = td[j].textContent || td[j].innerText;  // Get the text content
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {  // Case-insensitive match
+                        rowMatchesSearch = true;  // Row matches the search
+                        break;
+                    }
                 }
             }
-        }
 
-        // Show the row if it matches the search term and passes the admin filter
-        if (rowMatchesSearch) {
-            tr[i].style.display = "";  // Show the row
+            // Show the row if it matches both the search term and admin filter
+            if (rowMatchesSearch) {
+                tr[i].style.display = "";  // Show the row
+            }
         }
     }
-}
 
-function openeditHospedeModal(id) {
-    // Fetch existing data via AJAX
-    fetch('get_hospede.php?id=' + id)
-        .then(response => response.json())
-        .then(data => {
-            // Populate modal fields with existing data
-            document.getElementById('edit_id_hospede').value = data.id_hospede;
-            document.getElementById('edit_nome').value = data.nome;
-            document.getElementById('edit_email').value = data.email;
-            document.getElementById('edit_telefone').value = data.telefone;
-            document.getElementById('edit_endereco').value = data.endereco;
-            
-            // Check if the user is an admin and set the checkbox accordingly
-            document.getElementById('edit_is_admin').checked = data.is_admin == 1;
+    function openeditHospedeModal(id) {
+        // Fetch existing data via AJAX
+        fetch('get_hospede.php?id=' + id)
+            .then(response => response.json())
+            .then(data => {
+                // Populate modal fields with existing data
+                document.getElementById('edit_id_hospede').value = data.id_hospede;
+                document.getElementById('edit_nome').value = data.nome;
+                document.getElementById('edit_email').value = data.email;
+                document.getElementById('edit_telefone').value = data.telefone;
+                document.getElementById('edit_endereco').value = data.endereco;
+                
+                // Check if the user is an admin and set the checkbox accordingly
+                document.getElementById('edit_is_admin').checked = data.is_admin == 1;
 
-            // Show the modal
-            var editHospedeModal = new bootstrap.Modal(document.getElementById('editHospedeModal'));
-            editHospedeModal.show();
+                // Show the modal
+                var editHospedeModal = new bootstrap.Modal(document.getElementById('editHospedeModal'));
+                editHospedeModal.show();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    document.getElementById('editForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch('edit_hospedes.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            alert(result);
+            location.reload(); // This ensures the page reloads after saving changes
         })
         .catch(error => console.error('Error:', error));
-}
-
-document.getElementById('editForm').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const formData = new FormData(this);
-    fetch('edit_hospedes.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text())
-    .then(result => {
-        alert(result);
-        location.reload(); // This ensures the page reloads after saving changes
-    })
-    .catch(error => console.error('Error:', error));
-});
-
-function deleteRecord(id) {
-    if (confirm('Are you sure you want to delete this record?')) {
-        window.location.href = `delete_hospedes.php?id=${id}`;
-    }
-}
-
-// Function to open the edit modal for a room
-function openEditRoomModal(id_quarto, num_pessoas) {
-    // Populate the modal with existing room details
-    document.getElementById('editRoomId').value = id_quarto;
-    document.getElementById('editNumPessoas').value = num_pessoas;
-
-    // Show the modal
-    var myModal = new bootstrap.Modal(document.getElementById('editRoomModal'), {
-        keyboard: false
     });
-    myModal.show();
-}
 
-
-// Function to delete a room
-function deleteRoom(id_quarto) {
-    if (confirm('Are you sure you want to delete this room?')) {
-        // Make the delete request to the server
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'delete_room.php', true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                // Optionally, handle the response
-                if (xhr.responseText === 'success') {
-                    alert('Room deleted successfully');
-                    location.reload(); // Refresh the page to reflect the change
-                } else {
-                    alert('Error deleting room');
-                }
-            }
-        };
-        xhr.send('id_quarto=' + id_quarto);
+    function deleteRecord(id) {
+        if (confirm('Are you sure you want to delete this record?')) {
+            window.location.href = `delete_hospedes.php?id=${id}`;
+        }
     }
-}
 
-</script>
-
-<script>
-    // Function to open the edit reservation modal
     function openEditReservationModal(id, email, numGuests, checkinDate, checkoutDate) {
         // Populate the modal fields with the reservation data
         document.getElementById('editReservationId').value = id;
@@ -546,14 +527,29 @@ function deleteRoom(id_quarto) {
         editHospedeModal.show();
     }
 
-    // Function to confirm and delete a reservation
     function deleteReservation(id) {
         if (confirm('Are you sure you want to delete this reservation?')) {
             // Redirect to delete_reservations.php with the reservation ID
             window.location.href = `delete_reservation.php?id=${id}`;
         }
     }
+
+    function openEditRoomModal(id_quarto, num_pessoas) {
+        // Populate the modal with existing room details
+        document.getElementById('editRoomId').value = id_quarto;
+        document.getElementById('editNumPessoas').value = num_pessoas;
+
+        // Show the modal
+        var myModal = new bootstrap.Modal(document.getElementById('editRoomModal'), {
+            keyboard: false
+        });
+        myModal.show();
+    }
+
+    function deleteRoom(id_quarto) {
+        if (confirm('Are you sure you want to delete this record?')) {
+            window.location.href = `delete_room.php?id=${id_quarto}`;
+        }
+    }
 </script>
-
-
 <?php include "footer.php";?>

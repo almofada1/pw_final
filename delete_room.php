@@ -1,23 +1,17 @@
 <?php
-include 'db.php'; // Include database connection
+include 'db.php';
 
-// Check if the room ID is passed
-if (isset($_POST['id_quarto'])) {
-    $id_quarto = $_POST['id_quarto'];
+if (isset($_GET['id'])) {
+    $id_quarto = $_GET['id'];
 
-    // Prepare the DELETE SQL statement
+    // Delete room from the database
     $stmt = $conn->prepare("DELETE FROM quartos WHERE id_quarto = ?");
     $stmt->bind_param("i", $id_quarto);
 
-    // Execute the query
     if ($stmt->execute()) {
-        echo 'success';
+        header("Location: admin.php");
     } else {
-        echo 'error';
+        echo "Error deleting room.";
     }
-
-    // Close the statement and connection
-    $stmt->close();
-    $conn->close();
 }
 ?>

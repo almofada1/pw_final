@@ -76,8 +76,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $conn->close();
 
-    // After successful submission, redirect back to admin.php
-    header("Location: admin.php");
+
+    // Redirect back to the previous page (referer)
+    header("Location: " . $_SERVER['HTTP_REFERER']);
     exit();
+
 }
 ?>
