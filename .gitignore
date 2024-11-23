@@ -1,0 +1,12 @@
+# Ignore MySQL database files
+PWFinalDB/auto.cnf
+PWFinalDB/binlog.index
+PWFinalDB/ib_buffer_pool
+PWFinalDB/mysql.sock
+PWFinalDB/*.log
+PWFinalDB/*.pid
+PWFinalDB/*.err
+
+# Ignore other system files
+.DS_Store
+Thumbs.db

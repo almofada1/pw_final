@@ -1,0 +1,16 @@
+FROM mysql:latest
+
+# Set environment variables
+ENV MYSQL_ROOT_PASSWORD fragalha
+ENV MYSQL_DATABASE pwFinalDB
+ENV MYSQL_USER fragalha
+ENV MYSQL_PASSWORD fragalha
+
+# Copy the database backup file
+#COPY PWFinalDB.sql /docker-entrypoint-initdb.d/
+
+# Clean the data directory
+RUN rm -rf /var/lib/mysql/*
+
+# Start MySQL service
+CMD ["mysqld"]

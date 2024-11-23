@@ -1,0 +1,57 @@
+version: '3'
+services:
+  db:
+    build:
+      context: .
+      dockerfile: DockerfileDB
+    container_name: pwFinalDB
+    environment:
+      MYSQL_ROOT_PASSWORD: fragalha
+      MYSQL_DATABASE: pwFinalDB
+      MYSQL_USER: fragalha
+      MYSQL_PASSWORD: fragalha
+    volumes:
+      - PWFinalDBVolume:/var/lib/mysql
+    networks:
+      - pwFinalNetwork
+
+  web:
+    build:
+      context: .
+      dockerfile: DockerfileWeb
+    container_name: pwFinalWeb
+    ports:
+      - "8080:80"
+    volumes:
+      - PWFinalWebVolume:/var/www/html
+    networks:
+      - pwFinalNetwork
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: pwFinalDB
+      MYSQL_ROOT_PASSWORD: fragalha
+    ports:
+      - "8081:80"
+    networks:
+      - pwFinalNetwork
+
+networks:
+  pwFinalNetwork:
+    driver: bridge
+
+volumes:
+  PWFinalDBVolume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:\Users\Utilizador\Documents\Docker\PWFinal\PWFinalDB
+  PWFinalWebVolume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:\Users\Utilizador\Documents\Docker\PWFinal\PWFinalWeb
