@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $endereco = htmlspecialchars($_POST['endereco']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
-    $conn = new mysqli("my-mysql", "root", "fragalha", "pw_final");
+    $conn = new mysqli("pwFinalDB", "fragalha", "fragalha", "pwFinalDB");
 
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);

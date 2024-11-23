@@ -4,6 +4,11 @@ include 'db.php';
 if (isset($_GET['id'])) {
     $id_hospede = $_GET['id'];
 
+    $stmt = $conn->prepare("DELETE FROM reservas WHERE id_hospede = ?");
+    $stmt->bind_param("i", $id_hospede);
+    $stmt->execute();
+    $stmt->close();
+
     $stmt = $conn->prepare("DELETE FROM hospedes WHERE id_hospede = ?");
     $stmt->bind_param("i", $id_hospede);
 
@@ -12,7 +17,6 @@ if (isset($_GET['id'])) {
     } else {
         header("Location: admin.php?error=Failed to delete hospede");
     }
-
     $stmt->close();
     $conn->close();
 }

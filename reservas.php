@@ -4,6 +4,16 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 include 'db.php';
 
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php"); // Redirect if not logged in
+    exit();
+}
+
+if (isset($_SESSION['success'])) {
+    echo '<div class="alert alert-success">' . $_SESSION['success'] . '</div>';
+    unset($_SESSION['success']);  // Clear the success message
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get form data
     $email = $_POST['email'];

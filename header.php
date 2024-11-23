@@ -9,7 +9,7 @@ function isActive($page) {
 
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
-    $conn = new mysqli("my-mysql", "root", "fragalha", "pw_final");
+    $conn = new mysqli("pwFinalDB", "fragalha", "fragalha", "pwFinalDB");
 
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);

@@ -1,6 +1,7 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     include 'db.php';
+    session_start();
 
     // Get the reservation ID from POST data
     $id_reserva = $_POST['id_reserva'];
@@ -54,9 +55,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Get the available room ID
         $id_quarto = $room['id_quarto'];
 
+        // Prices per night based on the number of guests
+        $prices_per_night = [
+            1 => 100, // 1 guest: $100 per night
+            2 => 150, // 2 guests: $150 per night
+            3 => 200, // 3 guests: $200 per night
+            4 => 250  // 4 guests: $250 per night
+        ];
+
+        // Calculate price per night based on guest count
+        $price_per_night = isset($prices_per_night[$num_pessoas]) ? $prices_per_night[$num_pessoas] : 0;
+
+        // Calculate the number of nights
+        $checkin = new DateTime($checkin_date);
+        $checkout = new DateTime($checkout_date);
+        $interval = $checkin->diff($checkout);
+        $nights = $interval->days;
+
+        // Calculate the total amount
+        $valor_total = $price_per_night * $nights;
+
         // Update reservation details
-        $stmt = $conn->prepare("UPDATE reservas SET id_hospede = ?, data_checkin = ?, data_checkout = ?, num_pessoas = ?, id_quarto = ? WHERE id_reserva = ?");
-        $stmt->bind_param("issiii", $hospede_id, $checkin_date, $checkout_date, $num_pessoas, $id_quarto, $id_reserva);
+        $stmt = $conn->prepare("UPDATE reservas SET id_hospede = ?, data_checkin = ?, data_checkout = ?, num_pessoas = ?, id_quarto = ?, valor_total = ? WHERE id_reserva = ?");
+        $stmt->bind_param("issiiii", $hospede_id, $checkin_date, $checkout_date, $num_pessoas, $id_quarto, $valor_total, $id_reserva);
 
         if ($stmt->execute()) {
             $stmt_email = $conn->prepare("UPDATE hospedes SET email = ? WHERE id_hospede = ?");
@@ -76,10 +97,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $conn->close();
 
-
     // Redirect back to the previous page (referer)
     header("Location: " . $_SERVER['HTTP_REFERER']);
     exit();
-
 }
 ?>

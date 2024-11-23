@@ -2,10 +2,14 @@
 session_start();
 include 'db.php';  // Include your DB connection
 
-// Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php"); // Redirect if not logged in
+    header("Location: login.php");
     exit();
+}
+
+if (isset($_SESSION['success'])) {
+    echo '<div class="alert alert-success">' . $_SESSION['success'] . '</div>';
+    unset($_SESSION['success']);
 }
 
 $userId = $_SESSION['user_id'];  // Get logged-in user's ID
